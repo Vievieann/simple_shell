@@ -1,0 +1,153 @@
+#include "shell.h"
+
+/**
+ * execute_command - Execute a command using fork and execve.
+ * @ife: An array of strings representing the command and its arguments.
+ * @oy: An array of strings representing the command-line arguments.
+ */
+void execute_command(char **ife, char **oy)
+{
+	pid_t fo = fork();
+
+	if (fo == 0)
+	{
+		if (execve(ife[0], ife, NULL) == -1)
+			perror(oy[0]);
+	}
+	else
+	{
+		wait(NULL);
+	}
+}
+
+/**
+ * find_path_in_environ - Find the PATH variable in the environ array.
+ * @lnv: The array of environment variables.
+ * Return: The PATH variable value if found, otherwise NULL.
+ */
+char *find_path_in_environ(char **lnv)
+{
+	size_t i = 0;
+
+	while (lnv[i] != NULL)
+	{
+		if (strncmp(lnv[i], "PATH=", 5) == 0)
+		{
+			return (lnv[i] + 5);
+		}
+		i++;
+	}
+
+	return (NULL);
+}
+
+/**
+ * execute_with_path - Execute a command by
+ * searching for it in the PATH variable.
+ * @ife: An array of strings representing the command and its arguments.
+ * @oy: An array of strings representing the command-line arguments.
+ */
+void execute_with_path(char **ife, char **oy)
+{
+	size_t i = 0;
+	char *path, *strt1, **pathdel, *pathlnv;
+
+
+	pathlnv = find_path_in_environ(environ);
+	path = malloc(sizeof(char) * (strlen(pathlnv) + 1));
+	if (pathlnv != NULL)
+		strcpy(path, pathlnv);
+	strt1 = strtok(path, ":");
+	pathdel = malloc(sizeof(char *) * (strlen(pathlnv) + 1));
+
+	while (strt1 != NULL)
+	{
+		pathdel[i] = malloc(strlen(strt1) + 2 + strlen(ife[0]));
+		strcpy(pathdel[i], strt1);
+		strcat(pathdel[i], "/");
+		strcat(pathdel[i], ife[0]);
+
+		if (access(pathdel[i], X_OK) == 0)
+		{
+			strcpy(ife[0], pathdel[i]);
+			execute_command(ife, oy);
+		}
+		i++;
+		strt1 = strtok(NULL, ":");
+	}
+	pathdel[i] = NULL;
+	if (pathdel != NULL)
+	{
+		for (i = 0; pathdel[i] != NULL; i++)
+			free(pathdel[i]);
+		free(pathdel);
+	}
+	if (path != NULL)
+		free(path);
+
+}
+
+/**
+ * free_memory - Free dynamically allocated memory.
+ * @ife: An array of strings to be freed.
+ */
+void free_memory(char **ife)
+{
+	size_t i;
+
+	if (ife[0] != NULL)
+		for (i = 0; ife[i] != NULL; i++)
+			free(ife[i]);
+
+	if (ife != NULL)
+		free(ife);
+}
+
+/**
+ * info - the main entry for the function
+ * @oi: not used
+ * @lv: used now
+ * Return: success on 0
+ */
+
+int info(int oi, char **lv)
+{
+	char *lv = NULL, *strt, *del = " \n", **ife;
+	size_t n = 0, i;
+	FILE  *st = stdin;
+	ssize_t arr;
+	(void)oi;
+
+	while (1)
+	{
+		write(1, "#cisfun$ ", 9);
+		arr = getline(&lv, &n, st);
+		if (arr == -1)
+		{
+			write(1, "\n", 1);
+			break;
+		}
+		strt = strtok(res, del);
+		exe = malloc(sizeof(char *) * (arr + 1));
+		i = 0;
+		while (strt != NULL)
+		{
+			exe[i] = malloc(sizeof(char *) * (strlen(strt) + 1));
+			strcpy(ife[i], strt);
+			i++;
+			strt = strtok(NULL, del);
+		}
+		ife[i] = NULL;
+		if (access(ife[0], X_OK) == 0)
+			execute_command(ife, lv);
+
+		if (access(ife[0], X_OK) == -1)
+		{
+			execute_with_path(ife, lv);
+		}
+		free_memory(ife);
+	}
+	if (lv != NULL)
+		free(lv);
+	return (0);
+}

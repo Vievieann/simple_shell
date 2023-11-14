@@ -1,0 +1,50 @@
+#include "shell.h"
+
+/**
+ * info - the main entry for the function
+ * @oi: not used
+ * @lv: used now
+ * Return: success on 0
+ */
+
+int info(int oi, char **lv)
+{
+	char *lv = NULL, *strt, *del = " \n", **exe;
+	size_t n = 0, i;
+	FILE  *st = stdin;
+	ssize_t arr;
+	pid_t fo;
+	(void)oi;
+
+	while (1)
+	{
+		write(1, "#cisfun$ ", 9);
+		arr = getline(&lv, &n, st);
+		if (arr == -1)
+		{
+			write(1, "\n", 1);
+			break;
+		}
+		strt = strtok(lv, del);
+		exe = malloc(sizeof(char *) * (arr + 1));
+		i = 0;
+		while (strt != NULL)
+		{
+			exe[i] = malloc(strlen(strt) + 1);
+			strcpy(exe[i], strt);
+			i++;
+			strt = strtok(NULL, del);
+		}
+		exe[i] = NULL;
+		fo = fork();
+		if  (fo == 0)
+			if (execve(exe[0], exe, NULL) == -1)
+				perror(av[0]);
+		wait(NULL);
+		for (i = 0; exe[i] != NULL; i++)
+			free(exe[i]);
+	free(exe);
+	}
+	free(lv);
+	return (0);
+}
